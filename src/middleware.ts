@@ -1,17 +1,13 @@
-// src/middleware.ts
 import { createServerClient, type CookieOptions } from '@supabase/ssr'
 import { NextResponse, type NextRequest } from 'next/server'
 
 export async function middleware(request: NextRequest) {
-  // NextResponse.next() দিয়ে একটি response অবজেক্ট তৈরি করুন
-  // যাতে আমরা পরে কুকি সেট করতে পারি।
   let response = NextResponse.next({
     request: {
       headers: request.headers,
     },
   })
 
-  // Middleware-এর জন্য একটি Supabase ক্লায়েন্ট তৈরি করুন।
   const supabase = createServerClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
     process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
@@ -21,8 +17,6 @@ export async function middleware(request: NextRequest) {
           return request.cookies.get(name)?.value
         },
         set(name: string, value: string, options: CookieOptions) {
-          // যদি middleware কুকি সেট করে, তাহলে আমাদের মূল request
-          // এবং response উভয়কেই আপডেট করতে হবে।
           request.cookies.set({ name, value, ...options })
           response = NextResponse.next({
             request: {
@@ -44,7 +38,7 @@ export async function middleware(request: NextRequest) {
     }
   )
 
-  // এটি মূল অংশ: সেশন রিফ্রেশ করে কুকি আপ-টু-ডেট রাখে।
+  // সেশন রিফ্রেশ করে কুকি আপ-টু-ডেট রাখে
   await supabase.auth.getUser()
 
   return response
@@ -58,7 +52,6 @@ export const config = {
      * - _next/static (static files)
      * - _next/image (image optimization files)
      * - favicon.ico (favicon file)
-     * Feel free to add more paths here that shouldn't run through middleware
      */
     '/((?!_next/static|_next/image|favicon.ico).*)',
   ],

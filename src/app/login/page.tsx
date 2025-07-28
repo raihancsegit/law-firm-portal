@@ -1,7 +1,6 @@
 'use client'
 import { useState } from 'react'
-// ক্লায়েন্ট কম্পোনেন্টের জন্য src/lib/supabase/client.ts থেকে ক্লায়েন্ট ইম্পোর্ট করুন
-import { createClient } from '@/lib/supabase/client' 
+import { createClient } from '@/lib/supabase/client' // ক্লায়েন্ট ফাইল ইম্পোর্ট করুন
 import { useRouter } from 'next/navigation'
 
 export default function LoginPage() {
@@ -10,12 +9,11 @@ export default function LoginPage() {
   const [error, setError] = useState<string | null>(null)
   const router = useRouter()
   
-  // ক্লায়েন্ট-সাইড Supabase ইনস্ট্যান্স তৈরি করুন
   const supabase = createClient()
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault()
-    setError(null) // আগের error রিসেট করুন
+    setError(null)
 
     const { error } = await supabase.auth.signInWithPassword({
       email,
@@ -25,9 +23,8 @@ export default function LoginPage() {
     if (error) {
       setError(error.message)
     } else {
-      // এটি সার্ভার কম্পোনেন্ট এবং লেআউটকে নতুন সেশন সম্পর্কে অবহিত করে
-      router.refresh()
-      // ব্যবহারকারীকে ড্যাশবোর্ডে পাঠান
+      // Middleware এখন সেশন হ্যান্ডেল করবে, তাই refresh() অপরিহার্য নয়, তবে রাখা ভালো
+      router.refresh() 
       router.push('/dashboard')
     }
   }

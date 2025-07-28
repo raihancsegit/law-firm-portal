@@ -1,4 +1,4 @@
-import { createClient } from '@/lib/supabase/server' // সঠিক পাথ থেকে ইম্পোর্ট করুন
+import { createClient } from '@/lib/supabase/server' // সার্ভার ফাইল ইম্পোর্ট করুন
 import { redirect } from 'next/navigation'
 import Sidebar from '@/components/dashboard/Sidebar'
 import Header from '@/components/dashboard/Header'
@@ -13,7 +13,6 @@ export default async function DashboardLayout({
   const { data: { user } } = await supabase.auth.getUser()
 
   if (!user) {
-    // Middleware কাজ করার পর, এই কন্ডিশনটি শুধুমাত্র তখনই সত্য হবে যখন ব্যবহারকারী আসলেই লগইন করা নেই।
     return redirect('/login')
   }
   
@@ -24,12 +23,15 @@ export default async function DashboardLayout({
     .single()
 
   if (error || !profile) {
-    console.error("Profile not found for user:", user.id, error)
-    // আপনি এখানে একটি এরর পেজ দেখাতে পারেন অথবা লগআউট করে দিতে পারেন।
-    return redirect('/login?error=profile_not_found')
+    console.error(`Profile not found for user ID: ${user.id}. DB Error: ${error?.message}`)
+    // প্রোফাইল না পাওয়া গেলে লগআউট করে লগইন পেজে পাঠান
+    return redirect('/login?error=profile_not_found') 
   }
 
-  if (profile.role !== 'admin') {
+  // বিভিন্ন ভূমিকার জন্য ড্যাশবোর্ড অ্যাক্সেস নিয়ন্ত্রণ
+  if (profile.role !== 'admin' && profile.role !== 'attorney') {
+    // এখানে আপনি ক্লায়েন্টদের জন্য আলাদা ড্যাশবোর্ডে পাঠাতে পারেন,
+    // অথবা শুধুমাত্র অ্যাডমিন ও অ্যাটর্নিদের অনুমতি দিতে পারেন।
     return redirect('/unauthorized')
   }
 
