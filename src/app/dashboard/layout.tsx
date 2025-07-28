@@ -1,8 +1,7 @@
-// src/app/dashboard/layout.tsx
-import { createClient } from '@/lib/supabaseServer'
+import { createClient } from '@/lib/supabase/server' // সঠিক পাথ থেকে ইম্পোর্ট করুন
 import { redirect } from 'next/navigation'
-import Sidebar from '@/components/dashboard/Sidebar' // (পরবর্তী ধাপে তৈরি করা হবে)
-import Header from '@/components/dashboard/Header' // (পরবর্তী ধাপে তৈরি করা হবে)
+import Sidebar from '@/components/dashboard/Sidebar'
+import Header from '@/components/dashboard/Header'
 
 export default async function DashboardLayout({
   children,
@@ -14,18 +13,24 @@ export default async function DashboardLayout({
   const { data: { user } } = await supabase.auth.getUser()
 
   if (!user) {
+    // Middleware কাজ করার পর, এই কন্ডিশনটি শুধুমাত্র তখনই সত্য হবে যখন ব্যবহারকারী আসলেই লগইন করা নেই।
     return redirect('/login')
   }
   
-  const { data: profile } = await supabase
+  const { data: profile, error } = await supabase
     .from('profiles')
     .select('role')
     .eq('id', user.id)
     .single()
 
-  if (profile?.role !== 'admin') {
-     // একটি "Unauthorized" পেজ দেখানো যেতে পারে
-    return redirect('/unauthorized') 
+  if (error || !profile) {
+    console.error("Profile not found for user:", user.id, error)
+    // আপনি এখানে একটি এরর পেজ দেখাতে পারেন অথবা লগআউট করে দিতে পারেন।
+    return redirect('/login?error=profile_not_found')
+  }
+
+  if (profile.role !== 'admin') {
+    return redirect('/unauthorized')
   }
 
   return (

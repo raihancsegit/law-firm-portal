@@ -1,6 +1,6 @@
 import type { Metadata } from 'next'
 import { Inter } from 'next/font/google'
-import './globals.css' // আপনার গ্লোবাল CSS ফাইল
+import './globals.css' 
 
 const inter = Inter({ subsets: ['latin'] })
 
@@ -15,9 +15,8 @@ export default function RootLayout({
   children: React.ReactNode
 }) {
   return (
-    <html lang="en">
+    <html lang="en" suppressHydrationWarning>
       <head>
-        {/* Font Awesome CDN লিঙ্কটি এখানে যোগ করুন */}
         <link 
           rel="stylesheet" 
           href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" 

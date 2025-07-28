@@ -24,3 +24,26 @@ body {
   color: var(--foreground);
   font-family: Arial, Helvetica, sans-serif;
 }
+
+/* Default State (Inactive) */
+.nav-link-item {
+  color: #374151; /* text-gray-700 */
+}
+
+.nav-link-item:hover {
+  background-color: #f3f4f6; /* hover:bg-gray-100 */
+}
+
+.nav-link-item i {
+  color: #9ca3af; /* text-gray-400 */
+}
+
+/* Active State using data-active attribute */
+.nav-link-item[data-active="true"] {
+  background-color: #1e3a8a; /* bg-law-blue */
+  color: #ffffff; /* text-white */
+}
+
+.nav-link-item[data-active="true"] i {
+  color: #ffffff; /* text-white */
+}
