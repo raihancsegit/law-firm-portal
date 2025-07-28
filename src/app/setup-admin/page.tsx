@@ -10,6 +10,7 @@ export default function SetupAdminPage() {
       email: 'rafsanislamriyan@gmail.com', // আপনার অ্যাডমিন ইমেইল দিন
       password: 'Admin@1912',      // আপনার শক্তিশালী পাসওয়ার্ড দিন
       options: {
+         emailRedirectTo: `${window.location.origin}/auth/callback`, 
         data: {
           first_name: 'Admin',
           last_name: 'User',

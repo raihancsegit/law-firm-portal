@@ -1,4 +1,4 @@
-import { createClient } from '@/lib/supabase/server' // সার্ভার ফাইল ইম্পোর্ট করুন
+import { createClient } from '@/lib/supabase/server'
 import { redirect } from 'next/navigation'
 import Sidebar from '@/components/dashboard/Sidebar'
 import Header from '@/components/dashboard/Header'
@@ -8,32 +8,43 @@ export default async function DashboardLayout({
 }: {
   children: React.ReactNode
 }) {
+  console.log("--- Dashboard Layout Loading ---");
   const supabase = createClient()
 
-  const { data: { user } } = await supabase.auth.getUser()
+  const { data: { user }, error: userError } = await supabase.auth.getUser()
 
-  if (!user) {
+  if (userError || !user) {
+    console.log("User not found or error fetching user. Redirecting to login.");
+    console.error("User fetch error:", userError);
     return redirect('/login')
   }
   
-  const { data: profile, error } = await supabase
+  console.log(`User found: ${user.id}. Fetching profile...`);
+
+  // এখন profiles টেবিল থেকে ভূমিকা চেক করুন
+  const { data: profile, error: profileError } = await supabase
     .from('profiles')
     .select('role')
     .eq('id', user.id)
     .single()
 
-  if (error || !profile) {
-    console.error(`Profile not found for user ID: ${user.id}. DB Error: ${error?.message}`)
-    // প্রোফাইল না পাওয়া গেলে লগআউট করে লগইন পেজে পাঠান
-    return redirect('/login?error=profile_not_found') 
+  if (profileError || !profile) {
+    console.error(`CRITICAL: Profile not found for user ID: ${user.id}.`);
+    console.error("DB Error:", profileError);
+    // ডাটাবেস থেকে ব্যবহারকারীকে লগআউট করার চেষ্টা করুন
+    await supabase.auth.signOut();
+    return redirect(`/login?error=profile_not_found&uid=${user.id}`) 
   }
 
-  // বিভিন্ন ভূমিকার জন্য ড্যাশবোর্ড অ্যাক্সেস নিয়ন্ত্রণ
-  if (profile.role !== 'admin' && profile.role !== 'attorney') {
-    // এখানে আপনি ক্লায়েন্টদের জন্য আলাদা ড্যাশবোর্ডে পাঠাতে পারেন,
-    // অথবা শুধুমাত্র অ্যাডমিন ও অ্যাটর্নিদের অনুমতি দিতে পারেন।
+  console.log(`Profile found for user ${user.id}. Role: ${profile.role}`);
+
+  // যদি প্রোফাইলের ভূমিকা অ্যাডমিন না হয়
+  if (profile.role !== 'admin') {
+    console.log(`User ${user.id} is not an admin. Role: ${profile.role}. Redirecting to unauthorized.`);
     return redirect('/unauthorized')
   }
+
+  console.log(`User ${user.id} is an admin. Rendering dashboard.`);
 
   return (
     <div className="flex h-screen bg-gray-50">
