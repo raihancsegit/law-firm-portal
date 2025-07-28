@@ -5,10 +5,7 @@ export type UserProfile = {
   last_name: string | null;
   role: string | null;
   status: string | null;
-  email: string | null; // ফরম্যাট করার পর চূড়ান্ত টাইপ
-}
-
-// Supabase থেকে সরাসরি আসা ডেটার জন্য টাইপ
-export type RawUserProfile = Omit<UserProfile, 'email'> & {
-    users: { email: string } | null; // Supabase থেকে users(email) এভাবে আসে
+  email: string | null;
+  is_approved?: boolean; // এই ফিল্ডগুলোও যোগ করা ভালো
+  is_verified?: boolean;
 }

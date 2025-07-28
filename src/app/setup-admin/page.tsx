@@ -7,7 +7,7 @@ export default function SetupAdminPage() {
   
   const handleSetup = async () => {
     const { data, error } = await supabase.auth.signUp({
-      email: 'raihanislam.cse@gmail.com', // আপনার অ্যাডমিন ইমেইল দিন
+      email: 'rafsanislamriyan@gmail.com', // আপনার অ্যাডমিন ইমেইল দিন
       password: 'Admin@1912',      // আপনার শক্তিশালী পাসওয়ার্ড দিন
       options: {
         data: {
