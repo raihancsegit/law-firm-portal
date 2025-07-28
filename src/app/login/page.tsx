@@ -9,18 +9,20 @@ export default function LoginPage() {
   const router = useRouter()
 
   const handleLogin = async (e: React.FormEvent) => {
-    e.preventDefault()
+    e.preventDefault();
     const { error } = await supabase.auth.signInWithPassword({
-      email,
-      password,
-    })
+        email,
+        password,
+    });
+
     if (error) {
-      alert(error.message)
+        alert(error.message);
     } else {
-      router.push('/dashboard')
-      router.refresh() // সেশন রিফ্রেশ করার জন্য
+        // ড্যাশবোর্ডে পাঠানোর আগে পেজ রিফ্রেশ করুন
+        router.push('/dashboard');
+        router.refresh(); // This ensures the layout re-renders with the new session
     }
-  }
+};
 
   return (
     <div className="flex items-center justify-center min-h-screen bg-gray-100">
