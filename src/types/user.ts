@@ -1,4 +1,3 @@
-// src/types/user.ts
 export type UserProfile = {
   id: string;
   first_name: string | null;
@@ -6,6 +5,7 @@ export type UserProfile = {
   role: string | null;
   status: string | null;
   email: string | null;
-  is_approved?: boolean; // এই ফিল্ডগুলোও যোগ করা ভালো
+  is_approved?: boolean;
   is_verified?: boolean;
+  avatar_url?: string; // Optional avatar URL
 }

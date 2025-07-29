@@ -1,14 +1,18 @@
 import { createClient } from '@/lib/supabase/server'
+// নতুন অ্যাডমিন ক্লায়েন্ট ইম্পোর্ট করুন
+import { supabaseAdmin } from '@/lib/supabase/admin' 
 import UserManagementTabs from '@/components/dashboard/UserManagementTabs'
 import type { UserProfile } from '@/types/user'
 
-// Supabase-এর auth.users থেকে ইমেইলগুলোকে তাদের ID অনুযায়ী একটি ম্যাপে সাজানোর জন্য Helper ফাংশন
+// Helper ফাংশনটি এখন supabaseAdmin ব্যবহার করবে
 async function getUserEmailMap() {
-  const supabaseAdmin = createClient() // এটি service_role কী ব্যবহার করবে
+  // createClient() এর পরিবর্তে সরাসরি supabaseAdmin ব্যবহার করুন
   const { data: { users }, error } = await supabaseAdmin.auth.admin.listUsers()
   
   if (error) {
-    console.error("Error fetching user list from auth:", error)
+    // এররটি এখন আরও তথ্যবহুল হবে
+    console.error("Error fetching user list from auth admin API:", error.message)
+    // একটি খালি ম্যাপ রিটার্ন করুন যাতে অ্যাপ ক্র্যাশ না করে
     return new Map<string, string>()
   }
 
@@ -21,15 +25,15 @@ async function getUserEmailMap() {
 
 
 export default async function UserManagementPage() {
-  const supabase = createClient()
+  const supabase = createClient() // এই ক্লায়েন্টটি RLS পলিসি মেনে চলবে
 
-  // ধাপ ১: প্রথমে সকল ব্যবহারকারীর ইমেইল এবং আইডির একটি ম্যাপ তৈরি করুন
   const userEmailMap = await getUserEmailMap();
 
-  // ধাপ ২: এখন profiles টেবিল থেকে ডেটা আনুন, JOIN ছাড়া
+  // profiles টেবিল থেকে ডেটা আনার সময় সাধারণ ক্লায়েন্ট ব্যবহার করুন
+  // কারণ এটি অ্যাডমিনের RLS পলিসি দ্বারা সুরক্ষিত
   const { data: allProfiles, error: profilesError } = await supabase
     .from('profiles')
-    .select('id, first_name, last_name, role, status')
+    .select('id, first_name, last_name, role, status, is_approved, is_verified')
     
   if (profilesError) {
     console.error('Error fetching profiles:', profilesError)
@@ -41,13 +45,13 @@ export default async function UserManagementPage() {
     )
   }
 
-  // ধাপ ৩: প্রোফাইল ডেটার সাথে ইমেইল যুক্ত করুন
+  // প্রোফাইল ডেটার সাথে ইমেইল যুক্ত করুন
   const allUsersWithEmail: UserProfile[] = (allProfiles || []).map(profile => ({
     ...profile,
     email: userEmailMap.get(profile.id) || 'N/A',
   }));
 
-  // ধাপ ৪: ব্যবহারকারীদের তাদের গ্রুপ অনুযায়ী ফিল্টার করুন
+  // ব্যবহারকারীদের তাদের গ্রুপ অনুযায়ী ফিল্টার করুন
   const pendingUsers = allUsersWithEmail.filter(user => !user.is_approved && user.is_verified)
   const allClientsAndLeads = allUsersWithEmail.filter(user => (user.role === 'client' || user.role === 'lead') && user.is_approved)
   const staffUsers = allUsersWithEmail.filter(user => user.role === 'attorney' || user.role === 'admin')
