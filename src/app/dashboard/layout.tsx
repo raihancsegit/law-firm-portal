@@ -10,6 +10,7 @@ export default async function DashboardLayout({
 }) {
   console.log("--- Dashboard Layout Loading ---");
   const supabase = createClient()
+  
 
   const { data: { user }, error: userError } = await supabase.auth.getUser()
 

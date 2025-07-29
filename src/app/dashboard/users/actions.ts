@@ -2,9 +2,8 @@
 
 import { createClient } from '@/lib/supabase/server'
 import { revalidatePath } from 'next/cache'
-import { PostgrestError } from '@supabase/supabase-js'
 
-// একটি স্ট্যান্ডার্ড রেসপন্স টাইপ তৈরি করা ভালো অভ্যাস
+// একটি স্ট্যান্ডার্ড রেসপন্স টাইপ
 type ActionResult = {
   success: boolean;
   message: string;
@@ -14,7 +13,6 @@ type ActionResult = {
 export async function approveUser(userId: string): Promise<ActionResult> {
   const supabase = createClient()
   
-  // Phase 2: ব্যবহারকারীর প্রোফাইল তথ্য আনা (ফোল্ডার তৈরির জন্য)
   const { data: userProfile, error: profileError } = await supabase
     .from('profiles')
     .select('first_name, last_name')
@@ -36,23 +34,18 @@ export async function approveUser(userId: string): Promise<ActionResult> {
     return { success: false, message: updateError.message }
   }
 
-  // Phase 2: এখানে ফোল্ডার তৈরির লজিক ট্রিগার হবে
+  // Phase 2: ফোল্ডার তৈরির লজিক ট্রিগার হবে
   const folderName = `${userProfile.last_name}_${userProfile.first_name}_${userId}`;
   console.log(`User approved. TODO: Create storage folder named: ${folderName}`);
-  // await createFoldersForUser(userId, folderName); // এই ফাংশনটি পরে তৈরি করতে হবে
 
-  revalidatePath('/dashboard/users') // এই পেজের ডেটা পুনরায় আনার জন্য Next.js কে বলা
+  revalidatePath('/dashboard/users')
   return { success: true, message: 'User approved successfully.' }
 }
 
 // ব্যবহারকারী প্রত্যাখ্যান/ডিলিট করার ফাংশন
 export async function rejectUser(userId: string): Promise<ActionResult> {
-  // সার্ভার-সাইড অ্যাডমিন ক্লায়েন্ট তৈরি করতে হবে service_role key দিয়ে
-  const supabaseAdmin = createClient(); // createClient() should handle this if properly configured
-                                       // Alternatively, you can create a dedicated admin client.
+  const supabaseAdmin = createClient(); 
 
-  // Supabase Auth থেকে ইউজার ডিলিট করা
-  // এটি profiles থেকেও cascade delete করবে (যদি ডাটাবেসে foreign key constraint ঠিকমতো সেট করা থাকে)
   const { error: authError } = await supabaseAdmin.auth.admin.deleteUser(userId)
 
   if (authError) {
@@ -60,10 +53,36 @@ export async function rejectUser(userId: string): Promise<ActionResult> {
     return { success: false, message: authError.message }
   }
 
-  // Phase 2: ফাইল সিস্টেম/স্টোরেজ থেকে ব্যবহারকারীর ফোল্ডার ডিলিট করার লজিক
+  // Phase 2: স্টোরেজ থেকে ব্যবহারকারীর ফোল্ডার ডিলিট করার লজিক
   console.log(`User deleted. TODO: Delete user's storage folder.`);
-  // await deleteUserStorage(userId); // এই ফাংশনটি পরে তৈরি করতে হবে
 
   revalidatePath('/dashboard/users')
   return { success: true, message: 'User rejected and deleted successfully.' }
+}
+
+// ====================================================================
+// ===== নতুন ফাংশনটি এখানে যোগ করুন এবং export করুন =====
+// ====================================================================
+export async function updateCaseStatus(userId: string, newStatus: string): Promise<ActionResult> {
+  const supabase = createClient()
+
+  // নিরাপত্তার জন্য, শুধুমাত্র নির্দিষ্ট কিছু স্ট্যাটাসই সেট করা যাবে
+  const validStatuses = ['not_applied', 'application_in_progress', 'active', 'completed'];
+  if (!validStatuses.includes(newStatus)) {
+    return { success: false, message: 'Invalid status provided.' };
+  }
+
+  const { error } = await supabase
+    .from('profiles')
+    .update({ status: newStatus })
+    .eq('id', userId)
+
+  if (error) {
+    console.error('Error updating case status:', error);
+    return { success: false, message: error.message };
+  }
+
+  // `/dashboard/users` পেজের ডেটা পুনরায় আনার জন্য revalidate করুন
+  revalidatePath('/dashboard/users');
+  return { success: true, message: 'Case status updated.' };
 }

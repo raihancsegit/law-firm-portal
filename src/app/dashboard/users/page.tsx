@@ -1,4 +1,5 @@
 import { createClient } from '@/lib/supabase/server'
+
 // নতুন অ্যাডমিন ক্লায়েন্ট ইম্পোর্ট করুন
 import { supabaseAdmin } from '@/lib/supabase/admin' 
 import UserManagementTabs from '@/components/dashboard/UserManagementTabs'
@@ -33,7 +34,7 @@ export default async function UserManagementPage() {
   // কারণ এটি অ্যাডমিনের RLS পলিসি দ্বারা সুরক্ষিত
   const { data: allProfiles, error: profilesError } = await supabase
     .from('profiles')
-    .select('id, first_name, last_name, role, status, is_approved, is_verified')
+    .select('id, first_name, last_name, role, status, is_approved, is_verified,case_type, is_newsletter_subscribed')
     
   if (profilesError) {
     console.error('Error fetching profiles:', profilesError)

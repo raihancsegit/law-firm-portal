@@ -6,8 +6,24 @@ import { useState } from 'react'
 import { createClient } from '@/lib/supabase/client'
 import { useRouter } from 'next/navigation'
 
+// নেভিগেশন লিঙ্কের ডেটার জন্য একটি টাইপ ইন্টারফেস তৈরি করুন
+interface NavLinkProps {
+  href: string;
+  icon: string;
+  label: string;
+}
+
+// কম্পোনেন্টের Props এর জন্য টাইপ ডিফাইন করুন
+interface NavLinkComponentProps {
+  href: string;
+  icon: string;
+  label: string;
+  isCollapsed: boolean;
+  pathname: string;
+}
+
 // নেভিগেশন লিঙ্কগুলোর অ্যারে
-const navLinks = [
+const navLinks: NavLinkProps[] = [
   { href: '/dashboard', icon: 'fa-chart-pie', label: 'Dashboard Overview' },
   { href: '/dashboard/users', icon: 'fa-users', label: 'Clients & Leads' },
   { href: '/dashboard/settings/users', icon: 'fa-user-gear', label: 'User Management' },
@@ -15,21 +31,17 @@ const navLinks = [
   { href: '/dashboard/settings/forms', icon: 'fa-file-lines', label: 'Form Management' },
 ];
 
-const bottomLinks = [
+const bottomLinks: NavLinkProps[] = [
     { href: '/dashboard/profile', icon: 'fa-user-tie', label: 'Admin Profile' },
 ];
 
-// পুনর্ব্যবহারযোগ্য NavLink কম্পোনেন্ট
-const NavLink = ({ href, icon, label, isCollapsed, pathname }) => {
+// পুনর্ব্যবহারযোগ্য NavLink কম্পোনেন্ট (এখন টাইপ সহ)
+const NavLink = ({ href, icon, label, isCollapsed, pathname }: NavLinkComponentProps) => {
   const isActive = pathname === href;
 
   return (
     <li key={href}>
       <Link href={href} title={isCollapsed ? label : ''}>
-        {/* 
-          আমরা data-active অ্যাট্রিবিউট ব্যবহার করছি। 
-          CSS এই অ্যাট্রিবিউটের উপর ভিত্তি করে স্টাইল পরিবর্তন করবে।
-        */}
         <div
           className="nav-link-item group flex items-center px-3 py-2 text-sm font-medium rounded-lg transition-colors duration-200"
           data-active={isActive}
@@ -46,6 +58,7 @@ const NavLink = ({ href, icon, label, isCollapsed, pathname }) => {
     </li>
   );
 };
+
 
 export default function Sidebar() {
   const pathname = usePathname()
@@ -68,7 +81,7 @@ export default function Sidebar() {
       <div className="flex items-center justify-between p-4 border-b border-gray-200 h-20">
         {!isCollapsed && (
           <Link href="/dashboard">
-            <h1 className="text-lg font-bold text-law-blue">Cohen & Cohen P.C.</h1>
+            <h1 className="text-xl font-bold text-law-blue cursor-pointer">Cohen & Cohen P.C.</h1>
           </Link>
         )}
         <button onClick={toggleSidebar} className="p-2 rounded-lg hover:bg-gray-100 transition-colors duration-200">
@@ -79,14 +92,28 @@ export default function Sidebar() {
       <nav className="flex-1 p-4 overflow-y-auto flex flex-col">
         <ul className="space-y-2">
             {navLinks.map(link => (
-                <NavLink key={link.href} {...link} isCollapsed={isCollapsed} pathname={pathname} />
+                <NavLink 
+                    key={link.href}
+                    href={link.href}
+                    icon={link.icon}
+                    label={link.label}
+                    isCollapsed={isCollapsed} 
+                    pathname={pathname} 
+                />
             ))}
         </ul>
         
         <div className="mt-auto pt-6 border-t border-gray-200">
              <ul className="space-y-2">
                 {bottomLinks.map(link => (
-                    <NavLink key={link.href} {...link} isCollapsed={isCollapsed} pathname={pathname} />
+                    <NavLink 
+                        key={link.href}
+                        href={link.href}
+                        icon={link.icon}
+                        label={link.label}
+                        isCollapsed={isCollapsed} 
+                        pathname={pathname} 
+                    />
                 ))}
                  <li>
                     <button 
