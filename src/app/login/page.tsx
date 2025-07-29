@@ -16,29 +16,39 @@ export default function LoginPage() {
   const searchParams = useSearchParams()
   const supabase = createClient()
 
-  useEffect(() => {
-    // URL-এ প্যারামিটার আছে কিনা তা পরীক্ষা করুন
-    const verifiedParam = searchParams.get('verified')
-    const errorParam = searchParams.get('error')
+ useEffect(() => {
+    // URL থেকে বিভিন্ন প্যারামিটার পড়ুন
+    const errorParam = searchParams.get('error');
+    const errorDescriptionParam = searchParams.get('error_description');
+    const verifiedParam = searchParams.get('verified'); // যদিও এটি এখন আর ব্যবহৃত হচ্ছে না, রেখে দেওয়া ভালো
 
-    if (verifiedParam === 'true') {
-      setSuccessMessage('Email confirmed successfully! You can now log in.')
-      // URL থেকে প্যারামিটারটি সরিয়ে দিন যাতে পেজ রিফ্রেশ করলে বার্তাটি চলে যায়
-      router.replace('/login', { scroll: false })
+    // নতুন `confirmation_failed` এররটি হ্যান্ডেল করুন
+    if (errorParam === 'confirmation_failed') {
+      setError(errorDescriptionParam || 'Could not verify your email. The link may be invalid or has expired.');
+      // URL থেকে প্যারামিটারগুলো সরিয়ে দিন
+      const newPath = '/login';
+      router.replace(newPath, { scroll: false });
+      return; // একটি কন্ডিশন ম্যাচ করলে আর এগোনোর প্রয়োজন নেই
     }
 
-    if (errorParam === 'invalid_link') {
-      setError('The confirmation link is invalid or has expired. Please try signing up again.')
-      router.replace('/login', { scroll: false })
-    }
-
+    // পুরনো `profile_not_found` এররটি হ্যান্ডেল করুন
     if (errorParam === 'profile_not_found' || errorParam === 'profile_not_found_manual_check') {
-        setError('Login successful, but your user profile was not found. Please contact support.')
-        router.replace('/login', { scroll: false })
+        setError('Login successful, but your user profile was not found. Please contact support.');
+        const newPath = '/login';
+        router.replace(newPath, { scroll: false });
+        return;
+    }
+    
+    // সফলতার বার্তা হ্যান্ডেল করার জন্য (যদিও callback রুট এখন সরাসরি ড্যাশবোর্ডে পাঠায়)
+    if (verifiedParam === 'true') {
+      setSuccessMessage('Email confirmed successfully! You can now log in.');
+      const newPath = '/login';
+      router.replace(newPath, { scroll: false });
+      return;
     }
 
-  }, [searchParams, router])
-
+  }, [searchParams, router]);
+  
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault()
     setLoading(true)
