@@ -6,6 +6,7 @@ export type UserProfile = {
   status: string | null;
   email: string | null;
   
+  phone_number:string | null;
   // নতুন দুটি প্রপার্টি এখানে যোগ করুন
   case_type: string | null;
   is_newsletter_subscribed: boolean | null;

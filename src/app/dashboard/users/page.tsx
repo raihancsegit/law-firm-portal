@@ -2,7 +2,7 @@ import { createClient } from '@/lib/supabase/server'
 
 // নতুন অ্যাডমিন ক্লায়েন্ট ইম্পোর্ট করুন
 import { supabaseAdmin } from '@/lib/supabase/admin' 
-import UserManagementTabs from '@/components/dashboard/UserManagementTabs'
+import UserManagement from '@/components/dashboard/UserManagement'
 import type { UserProfile } from '@/types/user'
 
 // Helper ফাংশনটি এখন supabaseAdmin ব্যবহার করবে
@@ -30,11 +30,12 @@ export default async function UserManagementPage() {
 
   const userEmailMap = await getUserEmailMap();
 
+  
   // profiles টেবিল থেকে ডেটা আনার সময় সাধারণ ক্লায়েন্ট ব্যবহার করুন
   // কারণ এটি অ্যাডমিনের RLS পলিসি দ্বারা সুরক্ষিত
   const { data: allProfiles, error: profilesError } = await supabase
     .from('profiles')
-    .select('id, first_name, last_name, role, status, is_approved, is_verified,case_type, is_newsletter_subscribed')
+    .select('id, first_name, last_name, phone_number,role, status, is_approved, is_verified,case_type, is_newsletter_subscribed')
     
   if (profilesError) {
     console.error('Error fetching profiles:', profilesError)
@@ -57,6 +58,7 @@ export default async function UserManagementPage() {
   const allClientsAndLeads = allUsersWithEmail.filter(user => (user.role === 'client' || user.role === 'lead') && user.is_approved)
   const staffUsers = allUsersWithEmail.filter(user => user.role === 'attorney' || user.role === 'admin')
 
+  const allUsers = [...pendingUsers, ...allClientsAndLeads, ...staffUsers];
   return (
     <div>
       <div className="mb-6">
@@ -64,11 +66,7 @@ export default async function UserManagementPage() {
         <p className="text-sm text-gray-600 mt-1">Approve new users, manage existing clients, and oversee staff accounts.</p>
       </div>
       
-      <UserManagementTabs 
-        pendingUsers={pendingUsers}
-        allClientsAndLeads={allClientsAndLeads}
-        staffUsers={staffUsers}
-      />
+      <UserManagement allUsers={allUsers} />
     </div>
   )
 }

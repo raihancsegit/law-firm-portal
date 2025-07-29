@@ -47,3 +47,7 @@ body {
 .nav-link-item[data-active="true"] i {
   color: #ffffff; /* text-white */
 }
+
+.bg-law-blue {
+  background-color: rgb(30 58 138 / var(--tw-bg-opacity, 1));
+}
