@@ -282,7 +282,7 @@ export default function UserManagement({ allUsers }: Props) {
                                         <button onClick={() => handleAction('reject', user.id)} disabled={!!loadingAction} className="...">Reject</button>
                                     </>
                                 )}
-                                <Link href={`/dashboard/users/${user.id}`} className="inline-flex items-center px-3 py-1 text-xs font-medium text-white bg-law-blue rounded-full hover:bg-blue-700 transition-colors duration-200">Details</Link>
+                                <Link href={`/dashboard/users/${user.id}`} className="inline-flex items-center px-3 py-1 text-xs font-medium text-white bg-law-blue rounded-full hover:bg-blue-700 transition-colors duration-200">View Profile</Link>
                             </td>
                         </tr>
                     ))

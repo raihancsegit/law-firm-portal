@@ -1,19 +1,13 @@
 import { createClient } from '@/lib/supabase/server'
-
-// নতুন অ্যাডমিন ক্লায়েন্ট ইম্পোর্ট করুন
 import { supabaseAdmin } from '@/lib/supabase/admin' 
 import UserManagement from '@/components/dashboard/UserManagement'
 import type { UserProfile } from '@/types/user'
 
-// Helper ফাংশনটি এখন supabaseAdmin ব্যবহার করবে
 async function getUserEmailMap() {
-  // createClient() এর পরিবর্তে সরাসরি supabaseAdmin ব্যবহার করুন
   const { data: { users }, error } = await supabaseAdmin.auth.admin.listUsers()
   
   if (error) {
-    // এররটি এখন আরও তথ্যবহুল হবে
     console.error("Error fetching user list from auth admin API:", error.message)
-    // একটি খালি ম্যাপ রিটার্ন করুন যাতে অ্যাপ ক্র্যাশ না করে
     return new Map<string, string>()
   }
 
@@ -24,18 +18,14 @@ async function getUserEmailMap() {
   return emailMap
 }
 
-
 export default async function UserManagementPage() {
-  const supabase = createClient() // এই ক্লায়েন্টটি RLS পলিসি মেনে চলবে
-
+  const supabase = createClient()
   const userEmailMap = await getUserEmailMap();
 
-  
-  // profiles টেবিল থেকে ডেটা আনার সময় সাধারণ ক্লায়েন্ট ব্যবহার করুন
-  // কারণ এটি অ্যাডমিনের RLS পলিসি দ্বারা সুরক্ষিত
+  // profiles টেবিল থেকে সমস্ত প্রয়োজনীয় ফিল্ড আনুন
   const { data: allProfiles, error: profilesError } = await supabase
     .from('profiles')
-    .select('id, first_name, last_name, phone_number,role, status, is_approved, is_verified,case_type, is_newsletter_subscribed')
+    .select('id, first_name, last_name, phone_number, role, status, is_approved, is_verified, case_type, is_newsletter_subscribed, avatar_url, internal_notes')
     
   if (profilesError) {
     console.error('Error fetching profiles:', profilesError)
@@ -47,18 +37,25 @@ export default async function UserManagementPage() {
     )
   }
 
-  // প্রোফাইল ডেটার সাথে ইমেইল যুক্ত করুন
-  const allUsersWithEmail: UserProfile[] = (allProfiles || []).map(profile => ({
-    ...profile,
+  // প্রোফাইল ডেটার সাথে ইমেইল যুক্ত করুন এবং UserProfile টাইপের সাথে সামঞ্জস্যপূর্ণ করুন
+  // ...profile ব্যবহারের পরিবর্তে প্রতিটি প্রপার্টি সুস্পষ্টভাবে ম্যাপ করুন
+  const allUsers: UserProfile[] = (allProfiles || []).map(profile => ({
+    id: profile.id,
+    first_name: profile.first_name,
+    last_name: profile.last_name,
+    phone_number: profile.phone_number,
+    role: profile.role,
+    status: profile.status,
+    is_approved: profile.is_approved,
+    is_verified: profile.is_verified,
+    case_type: profile.case_type,
+    is_newsletter_subscribed: profile.is_newsletter_subscribed,
+    avatar_url: profile.avatar_url,
+    internal_notes: profile.internal_notes,
     email: userEmailMap.get(profile.id) || 'N/A',
   }));
 
-  // ব্যবহারকারীদের তাদের গ্রুপ অনুযায়ী ফিল্টার করুন
-  const pendingUsers = allUsersWithEmail.filter(user => !user.is_approved && user.is_verified)
-  const allClientsAndLeads = allUsersWithEmail.filter(user => (user.role === 'client' || user.role === 'lead') && user.is_approved)
-  const staffUsers = allUsersWithEmail.filter(user => user.role === 'attorney' || user.role === 'admin')
-
-  const allUsers = [...pendingUsers, ...allClientsAndLeads, ...staffUsers];
+  // আপনার UserManagement কম্পোনেন্ট এখন শুধুমাত্র একটি prop আশা করে
   return (
     <div>
       <div className="mb-6">

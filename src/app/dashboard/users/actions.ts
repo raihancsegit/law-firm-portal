@@ -2,7 +2,7 @@
 
 import { createClient } from '@/lib/supabase/server'
 import { revalidatePath } from 'next/cache'
-
+import type { UserProfile } from '@/types/user'
 // একটি স্ট্যান্ডার্ড রেসপন্স টাইপ
 type ActionResult = {
   success: boolean;
@@ -85,4 +85,27 @@ export async function updateCaseStatus(userId: string, newStatus: string): Promi
   // `/dashboard/users` পেজের ডেটা পুনরায় আনার জন্য revalidate করুন
   revalidatePath('/dashboard/users');
   return { success: true, message: 'Case status updated.' };
+}
+
+
+export async function updateUserProfileByAdmin(userId: string, profileData: Partial<UserProfile>) {
+    const supabase = createClient();
+
+    // শুধুমাত্র যে ফিল্ডগুলো অ্যাডমিন পরিবর্তন করতে পারে, সেগুলোই নিন
+    const { role, status, case_type, phone_number, internal_notes } = profileData;
+    const allowedUpdates = { role, status, case_type, phone_number, internal_notes };
+
+    const { error } = await supabase
+        .from('profiles')
+        .update(allowedUpdates)
+        .eq('id', userId);
+
+    if (error) {
+        console.error('Error updating profile by admin:', error);
+        return { success: false, message: error.message };
+    }
+
+    revalidatePath(`/dashboard/users/${userId}`);
+    revalidatePath('/dashboard/users');
+    return { success: true, message: 'Profile updated successfully.' };
 }
